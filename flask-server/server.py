@@ -1,9 +1,9 @@
-from flask import Flask, json,jsonify
+from flask import Flask, json,jsonify,request
 import psycopg2
 
 app= Flask(__name__)
 
-@app.route("/members")
+@app.route("/members", methods = ['GET','POST'])
 def members():
     conn=psycopg2.connect(
         host='localhost',
@@ -11,11 +11,14 @@ def members():
         user='postgres',
         password='99201012')
     cur=conn.cursor()
-
-    cur.execute("select * from testtable")
-    ruv=cur.fetchall()
-
-    return  jsonify(ruv)
+    if request.method == "POST":
+        #return jsonify(request.json['id'])
+        query="select * from testtable where id = "+(request.json['id'])
+        cur.execute(query)
+        ruv=cur.fetchall()
+        return jsonify(ruv)
+    else : 
+        return  'welcome'
 
     cur.close()
 
