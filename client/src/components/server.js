@@ -1,10 +1,14 @@
 import { Link } from "react-router-dom"
+import React,{useEffect } from 'react'
 
 const Server = ({setServer}) => {
     const handleCLick =(e)=>{
         console.log(e.target.rel)
         setServer(e.target.rel)
     }
+    useEffect(()=>(
+        setServer(0)
+    ))
     return (
         <div className="container">
             <section>
