@@ -3,66 +3,65 @@ import psycopg2
 
 app= Flask(__name__)
 
-@app.route("/members", methods = ['GET','POST'])
-def members():
-    conn=psycopg2.connect(
+def querys(query):
+        isFirst=True
+        if(request.json['id']):
+            isFirst=False
+            query+=("where CAST(id as varchar(10)) like '%"+str(request.json['id']))+"%'"
+        if(request.json['name']):
+            if(isFirst):
+                query+=" where LOWER(first_name) LIKE '%"+str(request.json['name'])+"%'"
+                isFirst=False
+            else:
+                query+=" AND LOWER(first_name) LIKE '%"+str(request.json['name'])+"%'"
+        return query
+    
+def connection(name,password):
+    return psycopg2.connect(
         host='localhost',
         database='test',
-        user='postgres',
-        password='99201012')
+        user=name,
+        password=password)
+
+@app.route("/members", methods = ['GET','POST'])
+def members():
+    #here mounting data requist
+    conn=connection('postgres','99201012')
     cur=conn.cursor()
     if request.method == "POST":
         isFirst=True
         #return jsonify(request.json['id'],request.json['name'])
-        query="select * from testtable "
-        if(request.json['id']):
-            query+="where id = "+(request.json['id'])
-        elif(request.json['name']):
-            query+=" first_name like '%"+request.json['id']+"%'"
+        query="select * from table1 "
+        query=querys(query)
         cur.execute(query)
-        colName=[desc[0] for desc in cur.description]
-        print(colName)
         ruv=cur.fetchall()
+        cur.close()
+        conn.close()
         return jsonify(ruv)
     else : 
         return  'welcome'
-
-    cur.close()
-
-    conn.close()
 @app.route('/all',methods = ['GET','POST'])
 def all():
-    conn=psycopg2.connect(
-        host='localhost',
-        database='test',
-        user='postgres',
-        password='99201012')
+    #here query search
+    conn=connection('postgres','99201012')
     cur=conn.cursor()
     if request.method == "POST":
-        isFirst=True
         query="select * from "
         server= int(request.json['server'])
         if(server==1):
-            query+="testtable"
+            query+="table1"
         elif(server==2):
-            query+="testtable2"
-        elif(request.json['id']):
-            isFirst=False
-            query+=("where id = "+str(request.json['id']))
-        if(request.json['name']):
-            if(isFirst):
-                query+=" where (first_name) LIKE '%"+str(request.json['name'])+"%'"
-                isFirst=False
-            else:
-                query+=" AND first_name LIKE '%"+str(request.json['name'])+"%'"
-        #return query
-        #query="select * from testtable LIMIT 100"
+            query+="table2"
+        query=querys(query)
         query+=" LIMIT 100"
         cur.execute(query)
         ruv=cur.fetchall()
+        cur.close()
+        conn.close()
         return jsonify(ruv)
     else : 
         return  'welcome'
+
 
 if __name__ =="__main__":
     app.run(debug=True)
